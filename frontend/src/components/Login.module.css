@@ -1,0 +1,108 @@
+﻿/* Login.module.css - scoped styles for the Login component */
+/* Theme: FoodieExpress - orange #fc8019, background #f8f8f8, card white */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f8f8f8;
+  padding: 16px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.09);
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #3d4152;
+  text-align: center;
+}
+
+.subtitle {
+  margin: 0 0 28px;
+  font-size: 0.88rem;
+  color: #686b78;
+  text-align: center;
+}
+
+.formGroup {
+  margin-bottom: 18px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3d4152;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #3d4152;
+  background: #fff;
+  box-sizing: border-box;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #fc8019;
+  box-shadow: 0 0 0 3px rgba(252, 128, 25, 0.18);
+  background: #fff;
+}
+
+.errorBox {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+
+.button {
+  width: 100%;
+  padding: 12px;
+  background: #fc8019;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    transform 0.1s ease;
+  margin-top: 4px;
+}
+
+.button:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

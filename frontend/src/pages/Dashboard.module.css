@@ -1,0 +1,87 @@
+/* Dashboard.module.css — shared styles for OwnerDashboard & CustomerHome */
+
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 16px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+}
+
+.badge {
+  display: inline-block;
+  background: #667eea;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+}
+
+.badgeCustomer {
+  background: #10b981;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  text-align: left;
+}
+
+.featureList li {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #374151;
+  margin-bottom: 8px;
+  background: #f3f4f6;
+  transition: background 0.15s;
+}
+
+.featureList li:hover {
+  background: #e5e7eb;
+}
+
+.logoutBtn {
+  width: 100%;
+  padding: 11px;
+  background: #efb344;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.logoutBtn:hover {
+  opacity: 0.88;
+}
