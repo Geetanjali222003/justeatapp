@@ -3,17 +3,23 @@ import api from "./axiosInstance";
 /**
  * POST /auth/login
  * @param {{ username: string, password: string }} credentials
- * @returns {Promise<{ message: string, role: string }>}
+ * @returns {Promise<{ token: string, role: string, username: string }>}
  */
-
 export const loginApi = (credentials) => api.post("/auth/login", credentials);
 
 /**
  * POST /auth/register
- * @param {{ username: string, password: string, role: string }} userData
- * @returns {Promise<string>} success message
+ * Registers the user after OTP is validated by backend.
+ * @param {{ username: string, email: string, password: string, role: string, otp: string }} userData
  */
 export const registerApi = (userData) => api.post("/auth/register", userData);
+
+/**
+ * POST /auth/send-otp
+ * Sends OTP to the provided email.
+ * @param {{ email: string }} payload
+ */
+export const sendOtpApi = (payload) => api.post("/auth/send-otp", payload);
 
 /**
  * POST /auth/forgot-password
