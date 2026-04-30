@@ -3,439 +3,272 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { resetPasswordApi } from "../api/authApi";
 
 /**
- * ResetPassword
- * ─────────────
- * Displays a form for choosing a new password.
- *
- * TOKEN HANDLING:
- *   The backend emails a link like:
- *     http://localhost:3000/reset-password?token=<JWT_OR_UUID>
- *   We read that token from the URL using useSearchParams().
- *   It is then sent to the backend as part of the request body.
- *   If no token is present in the URL, we show an error immediately.
- *
- * VALIDATION (all client-side, before hitting the network):
- *   1. Both fields must be filled.
- *   2. Passwords must match.
- *   3. Minimum 8 characters.
- *   4. At least one uppercase letter  (A-Z).
- *   5. At least one lowercase letter  (a-z).
- *   6. At least one digit             (0-9).
- *   7. At least one special character (!@#$%^&* etc.)
- *
- * On success → redirects to /login with a flag so Login can show a toast.
+ * ResetPassword - Minimal UI
+ * Calls POST /auth/reset-password with { email, otp, newPassword }
  */
 const ResetPassword = () => {
-  /* ── Read token from URL ────────────────────────────────────────────────── */
-  /**
-   * useSearchParams gives us access to ?key=value pairs in the URL.
-   * e.g. /reset-password?token=abc123  →  searchParams.get("token") === "abc123"
-   */
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token"); // null if not present
-
+  const emailFromUrl = searchParams.get("email") || "";
   const navigate = useNavigate();
 
-  /* ── Form state ─────────────────────────────────────────────────────────── */
+  const [email, setEmail] = useState(emailFromUrl);
+  const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNew, setShowNew] = useState(false); // toggle visibility
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  /* ── UI feedback state ──────────────────────────────────────────────────── */
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [fieldError, setFieldError] = useState(""); // inline field error
+  const [message, setMessage] = useState({ text: "", type: "" });
 
-  /* ════════════════════════════════════════════════════════════════════════
-     PASSWORD STRENGTH VALIDATION
-     Returns an error string if the password fails any rule, else "".
-  ════════════════════════════════════════════════════════════════════════ */
-  const validatePassword = (pwd) => {
-    if (pwd.length < 8) return "Password must be at least 8 characters.";
-    if (!/[A-Z]/.test(pwd))
-      return "Password must contain at least one uppercase letter (A-Z).";
-    if (!/[a-z]/.test(pwd))
-      return "Password must contain at least one lowercase letter (a-z).";
-    if (!/[0-9]/.test(pwd))
-      return "Password must contain at least one number (0-9).";
-    if (!/[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>\/?`~]/.test(pwd))
-      return "Password must contain at least one special character (!@#$%^&* …).";
-    return ""; // all rules passed
-  };
-
-  /* ── Password strength meter (0-4) ─────────────────────────────────────── */
-  const strengthScore = (pwd) => {
-    let score = 0;
-    if (pwd.length >= 8) score++;
-    if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
-    if (/[0-9]/.test(pwd)) score++;
-    if (/[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>\/?`~]/.test(pwd)) score++;
-    return score;
-  };
-  const score = strengthScore(newPassword);
-  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][score] || "";
-  const strengthColor =
-    ["", "#e06b7d", "#fc8019", "#4CC5CD", "#96be4b"][score] || "#e5e7eb";
-
-  /* ── Form submit handler ────────────────────────────────────────────────── */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg("");
-    setFieldError("");
-    setSuccessMsg("");
+    setMessage({ text: "", type: "" });
 
-    // 1. Validate password strength
-    const pwdError = validatePassword(newPassword);
-    if (pwdError) {
-      setFieldError(pwdError);
+    if (!email.trim()) {
+      setMessage({ text: "Email is required", type: "error" });
       return;
     }
 
-    // 2. Check passwords match
+    if (!otp.trim()) {
+      setMessage({ text: "OTP is required", type: "error" });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setMessage({
+        text: "Password must be at least 6 characters",
+        type: "error",
+      });
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
-      setFieldError("Passwords do not match. Please re-enter.");
+      setMessage({ text: "Passwords do not match", type: "error" });
       return;
     }
 
     setLoading(true);
     try {
-      /**
-       * API CALL: POST /auth/reset-password
-       * Body: { token: "<from URL>", newPassword: "<user input>" }
-       *
-       * The backend:
-       *   1. Verifies the token is valid and not expired.
-       *   2. Finds the user linked to the token.
-       *   3. Hashes and saves the new password.
-       *   4. Invalidates the token so it can't be reused.
-       */
-      await resetPasswordApi({ token, newPassword });
+      await resetPasswordApi({
+        email: email.trim(),
+        otp: otp.trim(),
+        newPassword,
+      });
 
-      setSuccessMsg("✅ Password reset successfully! Redirecting to login…");
-
-      // Give the user 2 seconds to read the success message, then redirect.
-      setTimeout(() => navigate("/login"), 2000);
+      setMessage({
+        text: "Password reset successful! Redirecting...",
+        type: "success",
+      });
+      setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       const msg =
         err.response?.data?.message ||
         err.response?.data ||
-        "Failed to reset password. The link may have expired. Please request a new one.";
-      setErrorMsg(String(msg));
+        "Failed to reset password";
+      setMessage({ text: String(msg), type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
-  /* ════════════════════════════════════════════════════════════════════════
-     GUARD: no token in URL
-  ════════════════════════════════════════════════════════════════════════ */
-  if (!token) {
+  if (!emailFromUrl) {
     return (
       <div
         style={{
-          minHeight: "100vh",
-          background: "#f0ebe1",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "1rem",
+          maxWidth: 400,
+          margin: "50px auto",
+          padding: 20,
+          textAlign: "center",
         }}
       >
         <div
-          className="bg-white rounded-4 shadow-sm p-4 p-md-5 text-center"
-          style={{ width: "100%", maxWidth: 440 }}
+          style={{
+            background: "#fff",
+            padding: 30,
+            borderRadius: 8,
+            boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+          }}
         >
-          <div style={{ fontSize: "3rem" }}>🔗</div>
-          <h5 className="fw-bold mt-3" style={{ color: "#3d4152" }}>
-            Invalid Reset Link
-          </h5>
-          <p className="text-muted mb-4" style={{ fontSize: "0.88rem" }}>
-            This password reset link is missing a token. Please use the link
-            from your email, or request a new one.
-          </p>
+          <h3 style={{ color: "#dc2626" }}>Invalid Link</h3>
+          <p>Missing email. Please request OTP again.</p>
           <Link
             to="/forgot-password"
-            className="btn fw-bold px-4"
-            style={{
-              background: "#fc8019",
-              color: "#fff",
-              border: "none",
-              borderRadius: 8,
-            }}
+            style={{ color: "#fc8019", fontWeight: 600 }}
           >
-            Request New Link
+            Send OTP Again
           </Link>
         </div>
       </div>
     );
   }
 
-  /* ════════════════════════════════════════════════════════════════════════
-     MAIN RENDER
-  ════════════════════════════════════════════════════════════════════════ */
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f0ebe1",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1rem",
-      }}
-    >
+    <div style={{ maxWidth: 400, margin: "50px auto", padding: 20 }}>
       <div
-        className="bg-white rounded-4 shadow-sm p-4 p-md-5"
-        style={{ width: "100%", maxWidth: 440 }}
+        style={{
+          background: "#fff",
+          padding: 30,
+          borderRadius: 8,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        }}
       >
-        {/* Brand */}
-        <div className="text-center mb-4">
-          <span style={{ fontSize: "2.5rem" }}>🍔</span>
-          <h4 className="fw-bold mt-2 mb-0" style={{ color: "#fc8019" }}>
-            FoodieExpress
-          </h4>
-          <p className="text-muted mt-1" style={{ fontSize: "0.88rem" }}>
-            Create a new password
-          </p>
-        </div>
-
-        <h5 className="fw-bold mb-1" style={{ color: "#3d4152" }}>
-          Set New Password
-        </h5>
-        <p className="text-muted mb-4" style={{ fontSize: "0.85rem" }}>
-          Choose a strong password for your account.
+        <h2 style={{ margin: "0 0 10px", color: "#fc8019" }}>Reset Password</h2>
+        <p style={{ marginBottom: 20, color: "#686b78", fontSize: 14 }}>
+          Enter OTP and new password
         </p>
 
-        {/* Success banner */}
-        {successMsg && (
+        {message.text && (
           <div
-            className="alert alert-success py-2 mb-3"
-            style={{ fontSize: "0.85rem" }}
+            style={{
+              padding: 10,
+              marginBottom: 15,
+              borderRadius: 4,
+              background: message.type === "error" ? "#fee2e2" : "#dcfce7",
+              color: message.type === "error" ? "#dc2626" : "#16a34a",
+              fontSize: 14,
+            }}
           >
-            {successMsg}
+            {message.text}
           </div>
         )}
 
-        {/* API error banner */}
-        {errorMsg && (
-          <div
-            className="alert alert-danger py-2 mb-3"
-            style={{ fontSize: "0.85rem" }}
-          >
-            {errorMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} noValidate>
-          {/* ── New Password ── */}
-          <div className="mb-2">
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 15 }}>
             <label
-              htmlFor="rp-new"
-              className="form-label fw-semibold"
-              style={{ fontSize: "0.85rem", color: "#3d4152" }}
+              style={{
+                display: "block",
+                marginBottom: 5,
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{
+                width: "100%",
+                padding: 10,
+                border: "1px solid #ddd",
+                borderRadius: 4,
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: 15 }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: 5,
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              OTP
+            </label>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="Enter OTP"
+              style={{
+                width: "100%",
+                padding: 10,
+                border: "1px solid #ddd",
+                borderRadius: 4,
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: 15 }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: 5,
+                fontSize: 14,
+                fontWeight: 600,
+              }}
             >
               New Password
             </label>
-            <div className="input-group">
-              <input
-                id="rp-new"
-                type={showNew ? "text" : "password"}
-                className="form-control"
-                placeholder="Min 8 chars, A-Z, a-z, 0-9, symbol"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  setFieldError("");
-                }}
-                disabled={loading}
-                autoFocus
-              />
-              {/* Toggle show/hide password */}
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setShowNew((v) => !v)}
-                tabIndex={-1}
-                style={{ fontSize: "0.85rem" }}
-              >
-                {showNew ? "Hide" : "Show"}
-              </button>
-            </div>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Min 6 characters"
+              style={{
+                width: "100%",
+                padding: 10,
+                border: "1px solid #ddd",
+                borderRadius: 4,
+              }}
+            />
           </div>
 
-          {/* Password strength meter */}
-          {newPassword.length > 0 && (
-            <div className="mb-3">
-              <div className="d-flex gap-1 mb-1">
-                {[1, 2, 3, 4].map((n) => (
-                  <div
-                    key={n}
-                    style={{
-                      flex: 1,
-                      height: 4,
-                      borderRadius: 99,
-                      background: n <= score ? strengthColor : "#e5e7eb",
-                      transition: "background 0.3s",
-                    }}
-                  />
-                ))}
-              </div>
-              <span
-                style={{
-                  fontSize: "0.75rem",
-                  color: strengthColor,
-                  fontWeight: 600,
-                }}
-              >
-                {strengthLabel}
-              </span>
-            </div>
-          )}
-
-          {/* ── Confirm Password ── */}
-          <div className="mb-2">
+          <div style={{ marginBottom: 15 }}>
             <label
-              htmlFor="rp-confirm"
-              className="form-label fw-semibold"
-              style={{ fontSize: "0.85rem", color: "#3d4152" }}
+              style={{
+                display: "block",
+                marginBottom: 5,
+                fontSize: 14,
+                fontWeight: 600,
+              }}
             >
               Confirm Password
             </label>
-            <div className="input-group">
-              <input
-                id="rp-confirm"
-                type={showConfirm ? "text" : "password"}
-                className="form-control"
-                placeholder="Re-enter your new password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  setFieldError("");
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Re-enter password"
+              style={{
+                width: "100%",
+                padding: 10,
+                border: "1px solid #ddd",
+                borderRadius: 4,
+              }}
+            />
+            {confirmPassword && (
+              <span
+                style={{
+                  fontSize: 12,
+                  color:
+                    newPassword === confirmPassword ? "#16a34a" : "#dc2626",
                 }}
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setShowConfirm((v) => !v)}
-                tabIndex={-1}
-                style={{ fontSize: "0.85rem" }}
               >
-                {showConfirm ? "Hide" : "Show"}
-              </button>
-            </div>
+                {newPassword === confirmPassword
+                  ? "✓ Passwords match"
+                  : "✗ Passwords do not match"}
+              </span>
+            )}
           </div>
 
-          {/* Match indicator */}
-          {confirmPassword.length > 0 && (
-            <div className="mb-3" style={{ fontSize: "0.78rem" }}>
-              {newPassword === confirmPassword ? (
-                <span style={{ color: "#96be4b", fontWeight: 600 }}>
-                  ✅ Passwords match
-                </span>
-              ) : (
-                <span style={{ color: "#e06b7d", fontWeight: 600 }}>
-                  ❌ Passwords do not match
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Inline field validation error */}
-          {fieldError && (
-            <div
-              className="alert alert-warning py-2 mb-3"
-              style={{ fontSize: "0.82rem" }}
-            >
-              ⚠️ {fieldError}
-            </div>
-          )}
-
-          {/* Password rules hint */}
-          <ul
-            className="mb-3 ps-3"
-            style={{ fontSize: "0.78rem", color: "#686b78", lineHeight: 1.8 }}
-          >
-            <li
-              style={{ color: newPassword.length >= 8 ? "#96be4b" : "inherit" }}
-            >
-              At least 8 characters
-            </li>
-            <li
-              style={{
-                color: /[A-Z]/.test(newPassword) ? "#96be4b" : "inherit",
-              }}
-            >
-              One uppercase letter (A-Z)
-            </li>
-            <li
-              style={{
-                color: /[a-z]/.test(newPassword) ? "#96be4b" : "inherit",
-              }}
-            >
-              One lowercase letter (a-z)
-            </li>
-            <li
-              style={{
-                color: /[0-9]/.test(newPassword) ? "#96be4b" : "inherit",
-              }}
-            >
-              One number (0-9)
-            </li>
-            <li
-              style={{
-                color: /[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>\/?`~]/.test(
-                  newPassword,
-                )
-                  ? "#96be4b"
-                  : "inherit",
-              }}
-            >
-              One special character (!@#$%^&* …)
-            </li>
-          </ul>
-
-          {/* Submit */}
           <button
             type="submit"
-            className="btn w-100 fw-bold py-2"
+            disabled={loading}
             style={{
-              background: "#fc8019",
+              width: "100%",
+              padding: 12,
+              background: loading ? "#ccc" : "#fc8019",
               color: "#fff",
               border: "none",
-              borderRadius: 8,
+              borderRadius: 4,
+              fontWeight: 600,
+              cursor: loading ? "not-allowed" : "pointer",
             }}
-            disabled={loading}
           >
-            {loading ? (
-              <>
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  role="status"
-                  aria-hidden="true"
-                />
-                Resetting…
-              </>
-            ) : (
-              "Reset Password"
-            )}
+            {loading ? "Resetting..." : "Reset Password"}
           </button>
         </form>
 
-        <div className="text-center mt-4" style={{ fontSize: "0.85rem" }}>
+        <p style={{ textAlign: "center", marginTop: 15, fontSize: 14 }}>
           <Link
             to="/login"
-            style={{
-              color: "#fc8019",
-              textDecoration: "none",
-              fontWeight: 600,
-            }}
+            style={{ color: "#fc8019", textDecoration: "none" }}
           >
             ← Back to Login
           </Link>
-        </div>
+        </p>
       </div>
     </div>
   );

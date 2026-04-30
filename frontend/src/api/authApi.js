@@ -16,26 +16,23 @@ export const registerApi = (userData) => api.post("/auth/register", userData);
 
 /**
  * POST /auth/send-otp
- * Sends OTP to the provided email.
+ * Sends OTP to the provided email for registration.
  * @param {{ email: string }} payload
  */
 export const sendOtpApi = (payload) => api.post("/auth/send-otp", payload);
 
 /**
- * POST /auth/forgot-password
- * Triggers a password-reset email for the given address.
+ * POST /auth/send-reset-otp
+ * Sends OTP for password reset.
  * @param {{ email: string }} payload
- * @returns {Promise} 200 OK on success
  */
-export const forgotPasswordApi = (payload) =>
-  api.post("/auth/forgot-password", payload);
+export const sendResetOtpApi = (payload) =>
+  api.post("/auth/send-reset-otp", payload);
 
 /**
  * POST /auth/reset-password
- * Validates the one-time token and saves the new password.
- * @param {{ token: string, newPassword: string }} payload
- *   token       – the value from ?token=... in the reset URL
- *   newPassword – the user's chosen new password (plain text; backend hashes it)
+ * OTP-based password reset.
+ * @param {{ email: string, otp: string, newPassword: string }} payload
  * @returns {Promise} 200 OK on success
  */
 export const resetPasswordApi = (payload) =>

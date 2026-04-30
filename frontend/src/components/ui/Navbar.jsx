@@ -24,17 +24,15 @@ const Navbar = () => {
   /* ── Dashboard path depends on user role ───────────────────────────── */
   const dashboardPath = () => {
     if (role === "OWNER") return "/owner-dashboard";
-    if (role === "ADMIN") return "/admin-dashboard";
-    if (role === "CUSTOMER") return "/customer-home";
-    return "/";
+    return "/customer-dashboard";
   };
 
   /* ── Logout handler ─────────────────────────────────────────────────── */
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("username");
-    navigate("/login");
+    if (window.confirm("Are you sure you want to logout?")) {
+      localStorage.clear();
+      navigate("/login");
+    }
   };
 
   /* ── Shared link style ──────────────────────────────────────────────── */

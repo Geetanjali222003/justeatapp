@@ -4,7 +4,13 @@ import { useEffect } from "react";
  * AppToast
  * Simple top-right toast for API/success/error feedback.
  */
-const AppToast = ({ show, message, type = "error", onClose, duration = 3000 }) => {
+const AppToast = ({
+  show,
+  message,
+  type = "error",
+  onClose,
+  duration = 3000,
+}) => {
   useEffect(() => {
     if (!show) return;
     const id = setTimeout(() => onClose?.(), duration);

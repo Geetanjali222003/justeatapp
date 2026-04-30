@@ -1,195 +1,128 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { forgotPasswordApi } from "../api/authApi";
+import { Link, useNavigate } from "react-router-dom";
+import { sendResetOtpApi } from "../api/authApi";
 
 /**
- * ForgotPassword
- * ──────────────
- * Lets a user enter their registered email address.
- * On submit it calls POST /auth/forgot-password with { email }.
- * The backend sends a password-reset link to that email.
- *
- * States:
- *   email       – controlled input value
- *   loading     – true while the API call is in-flight (disables button)
- *   successMsg  – shown when the backend responds 200
- *   errorMsg    – shown when the backend responds with an error
+ * ForgotPassword - Minimal UI
+ * Calls POST /auth/send-reset-otp to send OTP for password reset
  */
 const ForgotPassword = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [message, setMessage] = useState({ text: "", type: "" });
 
-  /* ── Basic email format check ───────────────────────────────────────────── */
-  const isValidEmail = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-
-  /* ── Form submit handler ────────────────────────────────────────────────── */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage({ text: "", type: "" });
 
-    // Clear previous messages
-    setSuccessMsg("");
-    setErrorMsg("");
-
-    // Client-side validation before hitting the network
     if (!email.trim()) {
-      setErrorMsg("Please enter your email address.");
-      return;
-    }
-    if (!isValidEmail(email)) {
-      setErrorMsg(
-        "Please enter a valid email address (e.g. user@example.com).",
-      );
+      setMessage({ text: "Please enter your email", type: "error" });
       return;
     }
 
     setLoading(true);
     try {
-      /**
-       * API CALL: POST /auth/forgot-password
-       * Body: { email: "user@example.com" }
-       * The backend looks up the user by email, generates a one-time token,
-       * and emails a reset link containing that token to the user.
-       */
-      await forgotPasswordApi({ email: email.trim() });
-
-      setSuccessMsg(
-        "✅ Reset link sent! Check your inbox (and spam folder) for the password reset email.",
-      );
-      setEmail(""); // clear input after success
+      await sendResetOtpApi({ email: email.trim() });
+      setMessage({ text: "OTP sent! Redirecting...", type: "success" });
+      setTimeout(() => {
+        navigate(`/reset-password?email=${encodeURIComponent(email.trim())}`);
+      }, 1000);
     } catch (err) {
-      /**
-       * err.response?.data may contain a backend error message.
-       * Fall back to a generic message if nothing is available.
-       */
       const msg =
         err.response?.data?.message ||
         err.response?.data ||
-        "Something went wrong. Please try again.";
-      setErrorMsg(String(msg));
+        "Failed to send OTP";
+      setMessage({ text: String(msg), type: "error" });
     } finally {
       setLoading(false);
     }
   };
 
-  /* ════════════════════════════════════════════════════════════════════════ */
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f0ebe1",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1rem",
-      }}
-    >
+    <div style={{ maxWidth: 400, margin: "50px auto", padding: 20 }}>
       <div
-        className="bg-white rounded-4 shadow-sm p-4 p-md-5"
-        style={{ width: "100%", maxWidth: 440 }}
+        style={{
+          background: "#fff",
+          padding: 30,
+          borderRadius: 8,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        }}
       >
-        {/* Brand */}
-        <div className="text-center mb-4">
-          <span style={{ fontSize: "2.5rem" }}>🍔</span>
-          <h4 className="fw-bold mt-2 mb-0" style={{ color: "#fc8019" }}>
-            FoodieExpress
-          </h4>
-          <p className="text-muted mt-1" style={{ fontSize: "0.88rem" }}>
-            Forgot your password?
-          </p>
-        </div>
-
-        <h5 className="fw-bold mb-1" style={{ color: "#3d4152" }}>
-          Reset Password
-        </h5>
-        <p className="text-muted mb-4" style={{ fontSize: "0.85rem" }}>
-          Enter the email linked to your account and we'll send you a reset
-          link.
+        <h2 style={{ margin: "0 0 10px", color: "#fc8019" }}>
+          Forgot Password
+        </h2>
+        <p style={{ marginBottom: 20, color: "#686b78", fontSize: 14 }}>
+          Enter your email to receive OTP
         </p>
 
-        {/* Success banner */}
-        {successMsg && (
+        {message.text && (
           <div
-            className="alert alert-success py-2 mb-3"
-            style={{ fontSize: "0.85rem" }}
+            style={{
+              padding: 10,
+              marginBottom: 15,
+              borderRadius: 4,
+              background: message.type === "error" ? "#fee2e2" : "#dcfce7",
+              color: message.type === "error" ? "#dc2626" : "#16a34a",
+              fontSize: 14,
+            }}
           >
-            {successMsg}
+            {message.text}
           </div>
         )}
 
-        {/* Error banner */}
-        {errorMsg && (
-          <div
-            className="alert alert-danger py-2 mb-3"
-            style={{ fontSize: "0.85rem" }}
-          >
-            {errorMsg}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} noValidate>
-          {/* Email field */}
-          <div className="mb-3">
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: 15 }}>
             <label
-              htmlFor="fp-email"
-              className="form-label fw-semibold"
-              style={{ fontSize: "0.85rem", color: "#3d4152" }}
+              style={{
+                display: "block",
+                marginBottom: 5,
+                fontSize: 14,
+                fontWeight: 600,
+              }}
             >
-              Email Address
+              Email
             </label>
             <input
-              id="fp-email"
               type="email"
-              className="form-control"
-              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              autoFocus
+              placeholder="you@example.com"
+              style={{
+                width: "100%",
+                padding: 10,
+                border: "1px solid #ddd",
+                borderRadius: 4,
+              }}
             />
           </div>
 
-          {/* Submit button — shows spinner while loading */}
           <button
             type="submit"
-            className="btn w-100 fw-bold py-2"
+            disabled={loading}
             style={{
-              background: "#fc8019",
+              width: "100%",
+              padding: 12,
+              background: loading ? "#ccc" : "#fc8019",
               color: "#fff",
               border: "none",
-              borderRadius: 8,
+              borderRadius: 4,
+              fontWeight: 600,
+              cursor: loading ? "not-allowed" : "pointer",
             }}
-            disabled={loading}
           >
-            {loading ? (
-              <>
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  role="status"
-                  aria-hidden="true"
-                />
-                Sending…
-              </>
-            ) : (
-              "Send Reset Link"
-            )}
+            {loading ? "Sending..." : "Send OTP"}
           </button>
         </form>
 
-        {/* Back to login link */}
-        <div className="text-center mt-4" style={{ fontSize: "0.85rem" }}>
+        <p style={{ textAlign: "center", marginTop: 15, fontSize: 14 }}>
           <Link
             to="/login"
-            style={{
-              color: "#fc8019",
-              textDecoration: "none",
-              fontWeight: 600,
-            }}
+            style={{ color: "#fc8019", textDecoration: "none" }}
           >
             ← Back to Login
           </Link>
-        </div>
+        </p>
       </div>
     </div>
   );

@@ -1,14 +1,14 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "../components/Login";
+import LoginPage from "../components/LoginPage";
 import ForgotPassword from "../components/ForgotPassword";
 import ResetPassword from "../components/ResetPassword";
-import Register from "../components/Register";
+import RegisterPage from "../components/RegisterPage";
+import OtpVerification from "../components/OtpVerification";
 import Navbar from "../components/ui/Navbar";
-import OwnerDashboard from "../pages/owner/OwnerDashboard";
-import CustomerHome from "../pages/customer/CustomerHome";
-import AdminDashboard from "../pages/admin/AdminDashboard";
+import OwnerDashboard from "../pages/owner/OwnerDashboardV2";
+import CustomerHome from "../pages/customer/CustomerDashboard";
 import Unauthorized from "../pages/Unauthorized";
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -19,8 +19,7 @@ import ProtectedRoute from "./ProtectedRoute";
  *   /                → redirect to /login
  *   /login           → public Login page
  *   /owner-dashboard → OWNER only (ProtectedRoute)
- *   /customer-home   → CUSTOMER only (ProtectedRoute)
- *   /admin-dashboard → ADMIN only (ProtectedRoute)
+ *   /customer-dashboard → CUSTOMER only (ProtectedRoute)
  *   /unauthorized    → shown when role doesn't match
  *   *                → 404 fallback redirects to /login
  */
@@ -33,10 +32,11 @@ const AppRouter = () => (
       <Route path="/" element={<Navigate to="/login" replace />} />
 
       {/* Public */}
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-otp" element={<OtpVerification />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      {/* /reset-password?token=<value> — token is read inside the component */}
+      {/* /reset-password?email=<value> — email is read inside the component */}
       <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* OWNER protected */}
@@ -51,20 +51,10 @@ const AppRouter = () => (
 
       {/* CUSTOMER protected */}
       <Route
-        path="/customer-home"
+        path="/customer-dashboard"
         element={
           <ProtectedRoute allowedRole="CUSTOMER">
             <CustomerHome />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* ADMIN protected */}
-      <Route
-        path="/admin-dashboard"
-        element={
-          <ProtectedRoute allowedRole="ADMIN">
-            <AdminDashboard />
           </ProtectedRoute>
         }
       />

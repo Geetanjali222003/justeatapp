@@ -48,15 +48,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     // -----------------------------------------------------------------------
-    // REGISTER — updated to include email
+    // REGISTER — updated to include email and role string conversion
     // -----------------------------------------------------------------------
     @Override
     public void register(RegisterRequestDTO request) {
 
         // 1) Block duplicate usernames
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException(
-                    "Username '" + request.getUsername() + "' is already taken.");
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("User already exists");
         }
 
         // 2) Block duplicate emails
@@ -67,12 +66,22 @@ public class AuthServiceImpl implements AuthService {
                     "Email '" + request.getEmail() + "' is already registered.");
         }
 
-        // 3) Build and save the new user with BCrypt-encoded password
+        // 3) Convert role string to enum
+        //    Frontend sends "CUSTOMER" or "OWNER" as string, we convert it to Role enum
+        com.CAPSTONEPROJECT.CAPSTONE.entity.Role roleEnum;
+        try {
+            roleEnum = com.CAPSTONEPROJECT.CAPSTONE.entity.Role.valueOf(request.getRole().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                    "Invalid role: '" + request.getRole() + "'. Must be CUSTOMER or OWNER.");
+        }
+
+        // 4) Build and save the new user with BCrypt-encoded password
         User newUser = User.builder()
                 .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())  // save email so reset-password emails can be sent
-                .role(request.getRole())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(roleEnum)  // set the converted role enum
                 .build();
 
         userRepository.save(newUser);

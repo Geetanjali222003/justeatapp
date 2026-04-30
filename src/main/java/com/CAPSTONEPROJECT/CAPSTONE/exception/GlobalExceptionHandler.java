@@ -24,6 +24,13 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
+    // 404: Authenticated principal not present in user table
+    @ExceptionHandler(UserNotRegisteredException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotRegistered(
+            UserNotRegisteredException ex) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
     // 400: Duplicate username/email or bad request (service-level checks)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(
