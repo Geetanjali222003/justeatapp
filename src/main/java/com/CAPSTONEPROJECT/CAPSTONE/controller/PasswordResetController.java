@@ -41,7 +41,7 @@ public class PasswordResetController {
     public ResponseEntity<Map<String, String>> forgotPassword(
             @RequestBody ForgotPasswordRequestDTO request) {
 
-        passwordResetService.generateResetToken(request.getEmail());
+        passwordResetService.sendOtp(request.getEmail());
 
         return ResponseEntity.ok(Map.of(
                 "message", "Password reset link has been sent. Please check your email."
@@ -51,7 +51,7 @@ public class PasswordResetController {
     /**
      * POST /auth/reset-password
      *
-     * Request:  { "token": "uuid-here", "newPassword": "MyPass@123" }
+     * Request:  { "email": "owner1@example.com", "otp": "123456", "newPassword": "MyPass@123" }
      * Response: { "message": "Password has been reset successfully." }
      *
      * On failure (invalid/expired token or weak password): 400 Bad Request
@@ -60,7 +60,11 @@ public class PasswordResetController {
     public ResponseEntity<Map<String, String>> resetPassword(
             @RequestBody ResetPasswordRequestDTO request) {
 
-        passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
+        passwordResetService.resetPassword(
+                request.getEmail(),
+                request.getOtp(),
+                request.getNewPassword()
+        );
 
         return ResponseEntity.ok(Map.of(
                 "message", "Password has been reset successfully. You can now log in."

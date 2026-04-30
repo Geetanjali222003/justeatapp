@@ -4,10 +4,9 @@ import lombok.*;
 
 /**
  * Request body for POST /auth/forgot-password
- * The "email" field is treated as the username in this app
- * (since User entity currently has no email field).
+ * Uses the user's registered email.
  *
- * Example: { "email": "owner1" }
+ * Example: { "email": "owner1@example.com" }
  */
 @Getter
 @Setter

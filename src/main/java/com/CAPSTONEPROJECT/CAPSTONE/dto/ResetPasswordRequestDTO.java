@@ -6,7 +6,8 @@ import lombok.*;
  * Request body for POST /auth/reset-password
  *
  * Example: {
- *   "token": "uuid-from-email",
+ *   "email": "owner1@example.com",
+ *   "otp": "123456",
  *   "newPassword": "MyPass@123"
  * }
  */
@@ -15,7 +16,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ResetPasswordRequestDTO {
-    private String token;
+    private String email;
+    private String otp;
     private String newPassword;
 }
 
