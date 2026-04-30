@@ -31,21 +31,21 @@ public class PasswordResetController {
     private final PasswordResetService passwordResetService;
 
     /**
-     * POST /auth/forgot-password
+     * POST /auth/forgot-password (or /auth/send-reset-otp)
      *
-     * Request:  { "email": "owner1" }
+     * Request:  { "email": "owner1@example.com" }
      * Response: { "message": "Reset link sent. Check your email." }
      *
      * On failure (user not found): 400 Bad Request (handled by GlobalExceptionHandler)
      */
-    @PostMapping("/forgot-password")
+    @PostMapping({"/forgot-password", "/send-reset-otp"})
     public ResponseEntity<Map<String, String>> forgotPassword(
             @RequestBody ForgotPasswordRequestDTO request) {
 
         passwordResetService.sendOtp(request.getEmail());
 
         return ResponseEntity.ok(Map.of(
-                "message", "Password reset link has been sent. Please check your email."
+                "message", "Password reset OTP has been sent. Please check your email."
         ));
     }
 
