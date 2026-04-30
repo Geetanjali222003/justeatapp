@@ -83,3 +83,83 @@ export const getRestaurantDetailsApi = (id) => api.get(`/customer/restaurants/${
  */
 export const getMenuByRestaurantApi = (restaurantId) =>
   api.get(`/customer/menu/${restaurantId}`);
+
+// ============ CART APIs ============
+
+/**
+ * POST /customer/cart/add
+ * Add item to cart
+ * @param {{ foodId: number, quantity: number }} item
+ */
+export const addToCartApi = (item) => api.post("/customer/cart/add", item);
+
+/**
+ * GET /customer/cart
+ * Get current cart items
+ */
+export const getCartApi = () => api.get("/customer/cart");
+
+/**
+ * DELETE /customer/cart/{id}
+ * Remove item from cart
+ */
+export const removeFromCartApi = (itemId) => api.delete(`/customer/cart/${itemId}`);
+
+/**
+ * PUT /customer/cart/{id}
+ * Update cart item quantity
+ */
+export const updateCartItemApi = (itemId, quantity) => 
+  api.put(`/customer/cart/${itemId}`, { quantity });
+
+/**
+ * DELETE /customer/cart
+ * Clear entire cart
+ */
+export const clearCartApi = () => api.delete("/customer/cart");
+
+// ============ ORDER APIs ============
+
+/**
+ * POST /customer/order/place
+ * Place order from cart
+ */
+export const placeOrderApi = () => api.post("/customer/order/place");
+
+/**
+ * GET /customer/order/{id}
+ * Get order details and tracking status
+ */
+export const getOrderByIdApi = (orderId) => api.get(`/customer/order/${orderId}`);
+
+/**
+ * GET /customer/orders
+ * Get order history
+ */
+export const getOrderHistoryApi = () => api.get("/customer/orders");
+
+/**
+ * GET /customer/orders/search
+ * Search orders by date
+ */
+export const searchOrdersApi = (filters = {}) => {
+  const params = new URLSearchParams();
+  if (filters.startDate) params.append("startDate", filters.startDate);
+  if (filters.endDate) params.append("endDate", filters.endDate);
+  return api.get(`/customer/orders/search?${params.toString()}`);
+};
+
+// ============ PREFERENCES APIs ============
+
+/**
+ * GET /customer/preferences
+ * Get customer preferences (favorite restaurants, cuisines)
+ */
+export const getPreferencesApi = () => api.get("/customer/preferences");
+
+/**
+ * POST /customer/preferences
+ * Save customer preferences
+ * @param {{ favoriteRestaurants: number[], favoriteCuisines: string[] }} prefs
+ */
+export const savePreferencesApi = (prefs) => api.post("/customer/preferences", prefs);
