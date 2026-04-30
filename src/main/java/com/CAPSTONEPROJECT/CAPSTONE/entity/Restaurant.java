@@ -2,14 +2,21 @@ package com.CAPSTONEPROJECT.CAPSTONE.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Restaurant entity - Represents a restaurant owned by an OWNER user
+ * 
+ * Relationships:
+ * - ManyToOne with User (owner)
+ * - OneToMany with Food (foods served)
+ * 
+ * NOTE: All text fields use columnDefinition = "TEXT" to avoid PostgreSQL bytea issues
  */
 @Entity
 @Table(name = "restaurants")
@@ -25,22 +32,28 @@ public class Restaurant {
     private Long id;
 
     @NotBlank(message = "Restaurant name is required")
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String name;
 
-    @Column(length = 500)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 200)
+    /**
+     * Location/city of the restaurant - used for location-based search
+     */
+    @Column(columnDefinition = "TEXT")
+    private String location;
+
+    @Column(columnDefinition = "TEXT")
     private String address;
 
-    @Column(length = 100)
+    @Column(columnDefinition = "TEXT")
     private String city;
 
-    @Column(length = 100)
+    @Column(columnDefinition = "TEXT")
     private String cuisine;
 
-    @Column(length = 20)
+    @Column(columnDefinition = "TEXT")
     private String phoneNumber;
 
     /**
@@ -56,9 +69,26 @@ public class Restaurant {
     @Builder.Default
     private Boolean active = true;
 
-    @NotNull(message = "Owner ID is required")
-    @Column(name = "owner_id", nullable = false)
+    /**
+     * Owner of this restaurant (User with OWNER role)
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private User owner;
+
+    /**
+     * For backward compatibility - stores owner_id directly
+     */
+    @Column(name = "owner_id", insertable = false, updatable = false)
     private Long ownerId;
+
+    /**
+     * Foods/menu items available at this restaurant
+     * Used for cuisine-based search
+     */
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<Food> foods = new ArrayList<>();
 
     @Column(name = "created_at")
     @Builder.Default

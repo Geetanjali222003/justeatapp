@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import RestaurantSearch from "../../components/RestaurantSearch";
 // Bootstrap CSS is imported globally in index.js — no CSS module needed here.
 
 /**
@@ -882,6 +883,8 @@ const CustomerHome = () => {
     switch (activeTab) {
       case "dashboard":
         return renderDashboard();
+      case "restaurants":
+        return renderRestaurants();
       case "orders":
         return renderOrders();
       case "browse":
@@ -896,11 +899,39 @@ const CustomerHome = () => {
   };
 
   /**
+   * renderRestaurants
+   * Browse restaurants by location, cuisine, or name
+   * Uses the RestaurantSearch component with filters
+   */
+  const renderRestaurants = () => {
+    const handleRestaurantSelect = (restaurant) => {
+      // Store selected restaurant for menu viewing
+      localStorage.setItem("selectedRestaurant", JSON.stringify(restaurant));
+      // Switch to menu tab
+      setActiveTab("browse");
+    };
+
+    return (
+      <>
+        <h5 className="fw-bold mb-1" style={{ color: "#3d4152" }}>
+          Discover Restaurants 🏪
+        </h5>
+        <p className="text-muted mb-4" style={{ fontSize: "0.88rem" }}>
+          Browse by location, cuisine, or search by name
+        </p>
+
+        <RestaurantSearch onRestaurantSelect={handleRestaurantSelect} />
+      </>
+    );
+  };
+
+  /**
    * Sidebar navigation items.
    * Cart label dynamically shows the item count when cart is non-empty.
    */
   const navItems = [
     { key: "dashboard", label: "🏠 Dashboard" },
+    { key: "restaurants", label: "🏪 Restaurants" },
     { key: "browse", label: "🍴 Menu" },
     { key: "cart", label: `🛒 Cart${cartCount > 0 ? ` (${cartCount})` : ""}` },
     { key: "orders", label: "📦 My Orders" },
